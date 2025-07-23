@@ -1,7 +1,7 @@
-ARG ALPINE_VERSION=3.21
+ARG ALPINE_VERSION=3.19
 FROM alpine:${ALPINE_VERSION}
 LABEL Maintainer="Tim de Pater <code@trafex.nl>"
-LABEL Description="Lightweight container with Nginx 1.26 & PHP 8.4 based on Alpine Linux."
+LABEL Description="Lightweight container with Nginx 1.26 & PHP 8.1 based on Alpine Linux."
 # Setup document root
 WORKDIR /var/www/html
 
@@ -9,27 +9,37 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
   curl \
   nginx \
-  php84 \
-  php84-ctype \
-  php84-curl \
-  php84-dom \
-  php84-fileinfo \
-  php84-fpm \
-  php84-gd \
-  php84-intl \
-  php84-mbstring \
-  php84-mysqli \
-  php84-opcache \
-  php84-openssl \
-  php84-phar \
-  php84-session \
-  php84-tokenizer \
-  php84-xml \
-  php84-xmlreader \
-  php84-xmlwriter \
+  php81 \
+  php81-ctype \
+  php81-curl \
+  php81-dom \
+  php81-fileinfo \
+  php81-fpm \
+  php81-gd \
+  php81-intl \
+  php81-mbstring \
+  php81-mysqli \
+  php81-opcache \
+  php81-openssl \
+  php81-pecl-opentelemetry \
+  php81-phar \
+  php81-session \
+  php81-tokenizer \
+  php81-xml \
+  php81-xmlreader \
+  php81-xmlwriter \
   supervisor
 
-RUN ln -s /usr/bin/php84 /usr/bin/php
+RUN ln -s /usr/bin/php81 /usr/bin/php
+
+# Configure OpenTelemetry
+ENV OTEL_PHP_AUTOLOAD_ENABLED=true
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4318
+ENV OTEL_SERVICE_NAME=php-fpm-service
+ENV OTEL_RESOURCE_ATTRIBUTES=deployment.environment=test
+ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+ENV OTEL_PROPAGATORS=baggage,tracecontext
 
 # Configure nginx - http
 COPY config/nginx.conf /etc/nginx/nginx.conf
@@ -37,9 +47,10 @@ COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/conf.d /etc/nginx/conf.d/
 
 # Configure PHP-FPM
-ENV PHP_INI_DIR /etc/php84
+ENV PHP_INI_DIR=/etc/php81
 COPY config/fpm-pool.conf ${PHP_INI_DIR}/php-fpm.d/www.conf
 COPY config/php.ini ${PHP_INI_DIR}/conf.d/custom.ini
+RUN php81 --ri opentelemetry
 
 # Configure supervisord
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -52,6 +63,12 @@ USER nobody
 
 # Add application
 COPY --chown=nobody src/ /var/www/html/
+
+# Add Composer
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
+
+# Run composer install to install the dependencies
+RUN composer install --optimize-autoloader --no-interaction --no-progress
 
 # Expose the port nginx is reachable on
 EXPOSE 8080
