@@ -196,7 +196,7 @@ service:
         - batch
         - resourcedetection
       #- resource/add_environment
-      exporters: [otlphttp, signalfx]
+      exporters: [otlphttp, signalfx, debug]
       # Use instead when sending to gateway
       #exporters: [otlp/gateway, signalfx]
     metrics:

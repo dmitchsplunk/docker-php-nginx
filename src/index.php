@@ -1,14 +1,16 @@
 <?php
-/* phpinfo(); */
 
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation;
 use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\API\Trace\StatusCode;
+use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\Context\Context;
+use OpenTelemetry\API\Globals;
+use OpenTelemetry\SemConv\TraceAttributes;
+use OpenTelemetry\SDK\Sdk;
 
 require 'vendor/autoload.php';
 
-/* The class to be instrumented */
 class DemoClass
 {
     public function run(): void
