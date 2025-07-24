@@ -1,0 +1,49 @@
+services:
+  splunk-otel-collector:
+    image: quay.io/signalfx/splunk-otel-collector:latest
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - SPLUNK_ACCESS_TOKEN=${SPLUNK_ACCESS_TOKEN}
+      - SPLUNK_REALM=${SPLUNK_REALM}
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment='test'
+      - SPLUNK_MEMORY_TOTAL_MIB=1024
+      - SPLUNK_HEC_TOKEN=${SPLUNK_HEC_TOKEN}
+      - SPLUNK_HEC_URL=${SPLUNK_HEC_URL}
+    command: [ "--config=/etc/otel-collector-config.yml" ]
+    volumes:
+      - ./otel/otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "13133:13133"
+      - "14250:14250"
+      - "14268:14268"
+      - "4317:4317"
+      - "4318:4318"
+      - "6060:6060"
+      - "9080:9080"
+      - "9411:9411"
+      - "9943:9943"
+  php-app:
+    image: php-app:1.0
+    environment:
+      - OTEL_PHP_AUTOLOAD_ENABLED=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://splunk-otel-collector:4318
+      - OTEL_SERVICE_NAME=php-fpm-service
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=test
+      - OTEL_TRACES_EXPORTER=console
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_PROPAGATORS=baggage,tracecontext
+    command: [ "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf" ]
+    ports:
+      - "80:8080"
+  redis:
+    image: redis:latest
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    command: ["redis-server"]
+    ports:
+      - "6379:6379"

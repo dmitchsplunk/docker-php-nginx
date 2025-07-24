@@ -43,6 +43,26 @@ Or mount your own code to be served by PHP-FPM & Nginx
 Major or minor changes are always published as a [release](https://github.com/TrafeX/docker-php-nginx/releases) with correspondending changelogs.
 The `latest` tag is automatically updated weekly to include the latests patches from Alpine Linux.
 
+## Building the Docker Image 
+
+docker build --platform linux/amd64 -t php-app:1.0 .
+
+## Configuring the OpenTelemetry Collector 
+
+To configure the OpenTelemetry collector, create a file named .env in the root director 
+of this solution, and add the following environment variables: 
+
+````
+SPLUNK_REALM=<i.e. us1>
+SPLUNK_ACCESS_TOKEN=<access token for Splunk Observability cloud>
+SPLUNK_HEC_TOKEN=<HEC token for Splunk Platform>
+SPLUNK_HEC_URL=<HEC URL for Splunk Platform>
+````
+
+## Run the Application 
+
+docker compose up
+
 ## Configuration
 In [config/](config/) you'll find the default configuration files for Nginx, PHP and PHP-FPM.
 If you want to extend or customize that you can do so by mounting a configuration file in the correct folder;

@@ -23,6 +23,7 @@ RUN apk add --no-cache \
   php81-openssl \
   php81-pecl-opentelemetry \
   php81-phar \
+  php-redis \
   php81-session \
   php81-tokenizer \
   php81-xml \
@@ -31,15 +32,6 @@ RUN apk add --no-cache \
   supervisor
 
 RUN ln -s /usr/bin/php81 /usr/bin/php
-
-# Configure OpenTelemetry
-ENV OTEL_PHP_AUTOLOAD_ENABLED=true
-ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4318
-ENV OTEL_SERVICE_NAME=php-fpm-service
-ENV OTEL_RESOURCE_ATTRIBUTES=deployment.environment=test
-ENV OTEL_TRACES_EXPORTER=otlp
-ENV OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-ENV OTEL_PROPAGATORS=baggage,tracecontext
 
 # Configure nginx - http
 COPY config/nginx.conf /etc/nginx/nginx.conf

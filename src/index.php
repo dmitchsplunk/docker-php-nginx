@@ -13,11 +13,25 @@ class DemoClass
 {
     public function run(): void
     {
-        echo 'Hello, world';
+        echo 'Connecting to Redis...<br>';
+
+        $redis = new Redis();
+        $redis->connect('redis');
+
+        echo 'Successfully connected to Redis<br>';
+        echo 'Calling redis->set<br>';
+
+        $redis->set('foo', 'bar');
+        echo 'Successfully called redis->set<br>';
+
+        echo 'Calling redis->get<br>';
+        $value = $redis->get('foo');
+        echo "Value is $value <br>";
     }
 }
 
 /* The auto-instrumentation code */
+/*
 OpenTelemetry\Instrumentation\hook(
     class: DemoClass::class,
     function: 'run',
@@ -38,6 +52,7 @@ OpenTelemetry\Instrumentation\hook(
         $span->end();
     }
 );
+*/
 
 /* Run the instrumented code, which will generate a trace */
 $demo = new DemoClass();
